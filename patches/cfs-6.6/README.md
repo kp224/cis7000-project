@@ -26,6 +26,7 @@ removed before removing the EEVDF code they modify.
 | `86bfbb7ce4f6` | Lag-based placement |
 | `e0c2ff903c32` | Removal of the initial CFS debit |
 | `af4cf40470c2` | Average virtual runtime accounting |
+| `2f88c8e802c8` | Documentation's base-slice setting name |
 
 Keep the generic augmented-rbtree helper and unrelated fixes. Resolve
 conflicts explicitly; do not replace whole files with Linux 6.5 copies.

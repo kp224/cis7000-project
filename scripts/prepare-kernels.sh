@@ -8,6 +8,7 @@ source "$project_root/configs/kernel-source.env"
 
 checkouts=("$project_root/work/linux-eevdf" "$project_root/work/linux-cfs")
 scheduler_paths=(
+    /Documentation/scheduler/sched-design-CFS.rst
     /include/linux/sched.h
     /kernel/sched/core.c
     /kernel/sched/debug.c

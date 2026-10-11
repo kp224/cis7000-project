@@ -1,0 +1,24 @@
+From edcf799b85c3e4d17e585abae4e067cea15fdcf0 Mon Sep 17 00:00:00 2001
+From: Kasra Panahi <kasrapanahi2@gmail.com>
+Date: Sun, 11 Oct 2026 15:20:36 -0400
+Subject: [PATCH] Restore the documented CFS setting
+
+Reverts upstream 2f88c8e802c8b128a155976631f4eb2ce4f3c805.
+Match the restored min_granularity_ns interface.
+---
+ Documentation/scheduler/sched-design-CFS.rst | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/scheduler/sched-design-CFS.rst b/Documentation/scheduler/sched-design-CFS.rst
+index f689198..03db555 100644
+--- a/Documentation/scheduler/sched-design-CFS.rst
++++ b/Documentation/scheduler/sched-design-CFS.rst
+@@ -94,7 +94,7 @@ other HZ detail.  Thus the CFS scheduler has no notion of "timeslices" in the
+ way the previous scheduler had, and has no heuristics whatsoever.  There is
+ only one central tunable (you have to switch on CONFIG_SCHED_DEBUG):
+ 
+-   /sys/kernel/debug/sched/base_slice_ns
++   /sys/kernel/debug/sched/min_granularity_ns
+ 
+ which can be used to tune the scheduler from "desktop" (i.e., low latencies) to
+ "server" (i.e., good batching) workloads.  It defaults to a setting suitable
