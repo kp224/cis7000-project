@@ -51,6 +51,13 @@ building requires the full tree on a case-sensitive Linux filesystem.
 - Replayed tree: `2519def936d64df42abe40b623249424845e5e6c`.
 - Source review found classic CFS behavior restored with unrelated 6.6
   changes retained. Manual conflict fixes are recorded in patches 10 and 13.
-- Compilation and CloudLab boot/smoke tests are still pending.
+- `kernel/sched/` compiled for both variants with x86-64 GCC 12.2.0,
+  with SMP enabled and disabled. Scheduler debugging, fair task groups,
+  and CFS bandwidth control were enabled. Paired configs were identical.
+- Full kernel linking, booting, and workload smoke tests remain pending.
+
+Local logs, configs, and the compile recipe are in `results/local-compile/`
+(ignored). These checks establish source and compilation consistency,
+not runtime correctness or a performance improvement.
 
 Intermediate patches leave EEVDF incomplete. Test only the full series.
