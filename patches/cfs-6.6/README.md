@@ -31,8 +31,26 @@ removed before removing the EEVDF code they modify.
 Keep the generic augmented-rbtree helper and unrelated fixes. Resolve
 conflicts explicitly; do not replace whole files with Linux 6.5 copies.
 
-## Status
+## Apply
 
-Restoration in progress. Intermediate patches can leave EEVDF incomplete
-and must not be used for benchmarks. The final series still needs a clean
-replay, source review, compilation, and CloudLab smoke tests.
+From a fresh project checkout:
+
+```sh
+bash scripts/prepare-kernels.sh
+bash scripts/apply-cfs-patches.sh
+```
+
+The second command applies `series` to `work/linux-cfs`. It refuses local
+changes, an incorrect base, or an unfinished Git operation. The EEVDF
+checkout remains unchanged. These sparse checkouts are for source work;
+building requires the full tree on a case-sensitive Linux filesystem.
+
+## Validation
+
+- All 17 patches replay cleanly onto the pinned base.
+- Replayed tree: `2519def936d64df42abe40b623249424845e5e6c`.
+- Source review found classic CFS behavior restored with unrelated 6.6
+  changes retained. Manual conflict fixes are recorded in patches 10 and 13.
+- Compilation and CloudLab boot/smoke tests are still pending.
+
+Intermediate patches leave EEVDF incomplete. Test only the full series.
