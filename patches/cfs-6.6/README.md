@@ -54,10 +54,15 @@ building requires the full tree on a case-sensitive Linux filesystem.
 - `kernel/sched/` compiled for both variants with x86-64 GCC 12.2.0,
   with SMP enabled and disabled. Scheduler debugging, fair task groups,
   and CFS bandwidth control were enabled. Paired configs were identical.
-- Full kernel linking, booting, and workload smoke tests remain pending.
+- Both full kernels built with GCC 11.4.0 and booted on a CloudLab m510
+  on 2026-10-11. Configs matched apart from their release names.
+- Both passed equal-share, nice-weight, sleep/wake, fork/exit, and migration
+  smoke checks. No new kernel log messages appeared during either run.
+- Function tracing observed `__pick_eevdf` on EEVDF and `sched_slice` on CFS.
+  Tracing was restored to `nop` afterward.
 
 Local logs and configs are in `results/local-compile/`
-(ignored). These checks establish source and compilation consistency,
-not runtime correctness or a performance improvement.
+and `results/cloudlab-ms0906/` (ignored). These checks establish basic
+operation; performance comparisons and broader correctness testing remain.
 
 Intermediate patches leave EEVDF incomplete. Test only the full series.
