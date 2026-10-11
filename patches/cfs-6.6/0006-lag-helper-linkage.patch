@@ -1,0 +1,24 @@
+From 548037e094fb0f01f83ba8c68dc1a488892e51d8 Mon Sep 17 00:00:00 2001
+From: Kasra Panahi <kasrapanahi2@gmail.com>
+Date: Sun, 11 Oct 2026 15:17:55 -0400
+Subject: [PATCH] Prepare lag helper removal
+
+Reverts upstream c958ca2013e28e7573ad95c028198cb67c1352dd.
+Intermediate step in the complete CFS restoration; not for benchmarking.
+---
+ kernel/sched/fair.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index cb22592..2cc180a 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -699,7 +699,7 @@ u64 avg_vruntime(struct cfs_rq *cfs_rq)
+  *
+  * XXX could add max_slice to the augmented data to track this.
+  */
+-static void update_entity_lag(struct cfs_rq *cfs_rq, struct sched_entity *se)
++void update_entity_lag(struct cfs_rq *cfs_rq, struct sched_entity *se)
+ {
+ 	s64 lag, limit;
+ 
