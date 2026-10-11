@@ -8,3 +8,4 @@
 0008-cfs-placement-argument.patch
 0009-cfs-granularity-name.patch
 0010-cfs-selection-preemption.patch
+0011-cfs-migration-placement.patch
