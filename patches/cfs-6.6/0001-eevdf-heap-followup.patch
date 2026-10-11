@@ -1,0 +1,25 @@
+From e1c2e3d604a41b9019ae6c550c4da83b77700b69 Mon Sep 17 00:00:00 2001
+From: Kasra Panahi <kasrapanahi2@gmail.com>
+Date: Sun, 11 Oct 2026 15:17:54 -0400
+Subject: [PATCH] Revert EEVDF heap follow-up
+
+Reverts upstream d2929762cc3f85528b0ca12f6f63c2a714f24778.
+Intermediate step in the complete CFS restoration; not for benchmarking.
+---
+ kernel/sched/fair.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index df348aa..061a30a 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -3657,8 +3657,7 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
+ 		 */
+ 		deadline = div_s64(deadline * old_weight, weight);
+ 		se->deadline = se->vruntime + deadline;
+-		if (se != cfs_rq->curr)
+-			min_deadline_cb_propagate(&se->run_node, NULL);
++		min_deadline_cb_propagate(&se->run_node, NULL);
+ 	}
+ 
+ #ifdef CONFIG_SMP
