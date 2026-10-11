@@ -1,0 +1,68 @@
+From 0be84a764928acfc06860228d4ddb221b924cdb4 Mon Sep 17 00:00:00 2001
+From: Kasra Panahi <kasrapanahi2@gmail.com>
+Date: Sun, 11 Oct 2026 15:20:08 -0400
+Subject: [PATCH] Restore CFS initial task debit
+
+Reverts upstream e0c2ff903c320d3fd3c2c604dc401b3b7c0a1d13.
+Part of the complete CFS restoration; build and boot validation are pending.
+---
+ kernel/sched/fair.c     | 21 ++++++++++++++++++++-
+ kernel/sched/features.h |  6 ++++++
+ 2 files changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 0838581..6fce46a 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -907,6 +907,16 @@ static u64 sched_slice(struct cfs_rq *cfs_rq, struct sched_entity *se)
+ 	return slice;
+ }
+ 
++/*
++ * We calculate the vruntime slice of a to-be-inserted task.
++ *
++ * vs = s/w
++ */
++static u64 sched_vslice(struct cfs_rq *cfs_rq, struct sched_entity *se)
++{
++	return calc_delta_fair(sched_slice(cfs_rq, se), se);
++}
++
+ #include "pelt.h"
+ #ifdef CONFIG_SMP
+ 
+@@ -4853,7 +4863,16 @@ static inline bool entity_is_long_sleeper(struct sched_entity *se)
+ static void
+ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
+ {
+-	u64 vruntime = avg_vruntime(cfs_rq);
++	u64 vruntime = cfs_rq->min_vruntime;
++
++	/*
++	 * The 'current' period is already promised to the current tasks,
++	 * however the extra weight of the new task will slow them down a
++	 * little, place the new task so that it fits in the slot that
++	 * stays open at the end.
++	 */
++	if (initial && sched_feat(START_DEBIT))
++		vruntime += sched_vslice(cfs_rq, se);
+ 
+ 	/* sleeps up to a single latency don't count. */
+ 	if (!initial) {
+diff --git a/kernel/sched/features.h b/kernel/sched/features.h
+index 17ef8a3..e10074c 100644
+--- a/kernel/sched/features.h
++++ b/kernel/sched/features.h
+@@ -6,6 +6,12 @@
+  */
+ SCHED_FEAT(GENTLE_FAIR_SLEEPERS, true)
+ 
++/*
++ * Place new tasks ahead so that they do not starve already running
++ * tasks
++ */
++SCHED_FEAT(START_DEBIT, true)
++
+ /*
+  * Prefer to schedule the task we woke last (assuming it failed
+  * wakeup-preemption), since its likely going to consume data we
