@@ -56,7 +56,7 @@ building requires the full tree on a case-sensitive Linux filesystem.
   and CFS bandwidth control were enabled. Paired configs were identical.
 - Full kernel linking, booting, and workload smoke tests remain pending.
 
-Local logs, configs, and the compile recipe are in `results/local-compile/`
+Local logs and configs are in `results/local-compile/`
 (ignored). These checks establish source and compilation consistency,
 not runtime correctness or a performance improvement.
 
