@@ -25,3 +25,12 @@ Exclude the background-only tail and partially overlapping chunks.
 
 Use three repeats per load for this exploratory matrix. Final results need
 at least five repeats and alternating kernel order, as stated in the proposal.
+
+After setting up rt-app, run the matrix on each kernel:
+
+```sh
+python3 benchmarks/rt-app/run_contention.py results/rt-app-contention --calibration 19
+```
+
+Each kernel gets its own directory; existing data is never overwritten.
+The runner checks worker settings and records commands' output and metadata.
