@@ -1,0 +1,26 @@
+{
+  "global": {
+    "duration": -1,
+    "calibration": "CPU2",
+    "default_policy": "SCHED_OTHER",
+    "lock_pages": false,
+    "logdir": ".",
+    "log_basename": "rt-app",
+    "log_size": 1,
+    "ftrace": "none"
+  },
+  "tasks": {
+    "periodic": {
+      "policy": "SCHED_OTHER",
+      "priority": 0,
+      "cpus": [2],
+      "loop": 1000,
+      "phases": {
+        "work": {
+          "run": 1000,
+          "timer": { "ref": "unique", "period": 10000, "mode": "absolute" }
+        }
+      }
+    }
+  }
+}
