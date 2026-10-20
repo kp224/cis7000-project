@@ -43,3 +43,11 @@ python3 benchmarks/rt-app/analyze_contention.py results/rt-app-contention
 
 The summary keeps per-run metrics and shows their median/min/max. It rejects
 missing samples, mismatched settings, or competitors that finish too early.
+
+With Matplotlib installed locally, create the PNG and SVG graphs:
+
+```sh
+python3 benchmarks/rt-app/plot_contention.py results/rt-app-contention
+```
+
+Graph bars show the observed run range, not a confidence interval.
