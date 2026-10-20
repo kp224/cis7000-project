@@ -8,6 +8,13 @@ source "$project_root/configs/kernel-source.env"
 }
 jobs=${JOBS:-8}
 [[ $jobs =~ ^[1-9][0-9]*$ ]] || { echo 'JOBS must be positive.' >&2; exit 1; }
+# Keep m510 as the default; select the additional model explicitly.
+node_type=${NODE_TYPE:-m510}
+case "$node_type" in
+    m510) drivers=(BLK_DEV_NVME MLX4_EN) ;;
+    c6525-25g) drivers=(SATA_AHCI SCSI BLK_DEV_SD MLX5_CORE MLX5_CORE_EN) ;;
+    *) echo "Unsupported NODE_TYPE: $node_type" >&2; exit 1 ;;
+esac
 common="$project_root/work/kernel-config"
 results="$project_root/results/cloudlab-build"
 mkdir -p "$common" "$results"
@@ -24,7 +31,8 @@ done
     2519def936d64df42abe40b623249424845e5e6c ]]
 
 # Derive the shared config once, retaining this node's loaded drivers.
-if [[ ! -f "$common/ready.config" ]]; then
+config="$common/ready.config"
+if [[ ! -f "$config" ]]; then
     cp "/boot/config-$(uname -r)" "$results/seed.config"
     cp "$results/seed.config" "$common/.config"
     lsmod > "$results/lsmod.txt"
@@ -40,14 +48,19 @@ if [[ ! -f "$common/ready.config" ]]; then
         --disable MODULE_SIG --disable LOCALVERSION_AUTO \
         --enable SCHED_DEBUG --enable SCHEDSTATS
     make -C "$tree" O="$common" LOCALVERSION= olddefconfig
-    for key in BLK_DEV_NVME EXT4_FS MLX4_EN SERIAL_8250_CONSOLE EFI BLK_DEV_INITRD NFS_FS; do
-        grep -Eq "^CONFIG_${key}=[ym]$" "$common/.config" || {
-            echo "Missing required driver: CONFIG_$key" >&2; exit 1;
-        }
-    done
-    cp "$common/.config" "$common/ready.config"
+    config="$common/.config"
 fi
 
+# Check cached configs too, so changing NODE_TYPE cannot skip driver checks.
+for key in "${drivers[@]}" EXT4_FS SERIAL_8250_CONSOLE EFI BLK_DEV_INITRD NFS_FS; do
+    grep -Eq "^CONFIG_${key}=[ym]$" "$config" || {
+        echo "Missing required driver for $node_type: CONFIG_$key" >&2; exit 1;
+    }
+done
+if [[ "$config" != "$common/ready.config" ]]; then
+    cp "$config" "$common/ready.config"
+fi
+printf '%s\n' "$node_type" > "$results/node-type.txt"
 gcc --version > "$results/compiler.txt"
 for variant in eevdf cfs; do
     tree="$project_root/work/linux-$variant"
