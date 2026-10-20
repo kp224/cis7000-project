@@ -16,11 +16,17 @@ COLORS = {'cfs': '#2563B8', 'eevdf': '#D66B29'}
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('root', type=Path, help='Directory containing summary.json')
+    parser.add_argument('--kernel-order', choices=('cfs-first', 'eevdf-first'),
+                        help='Annotate the order of the two kernel boot blocks.')
     args = parser.parse_args()
     data = json.loads((args.root / 'summary.json').read_text())
+    counts = tuple(data.get('worker_counts', COUNTS))
+    if not counts or len(set(counts)) != len(counts) or not set(counts).issubset(COUNTS):
+        parser.error('Expected a nonempty subset of worker counts 1, 2, 4, 8.')
+    counts = tuple(sorted(counts))
     groups = {(g['variant'], g['workers']): g for g in data['groups']}
-    if len(groups) != 8 or set(groups) != {(v, n) for v in COLORS for n in COUNTS}:
-        parser.error('Expected both kernels at 1, 2, 4 and 8 competing workers.')
+    if len(groups) != len(data['groups']) or set(groups) != {(v, n) for v in COLORS for n in counts}:
+        parser.error('Expected exactly one group per kernel and requested worker count.')
     if any(g['repeats'] != data['repeats'] for g in groups.values()):
         parser.error('Inconsistent repeat counts.')
     plt.rcParams.update({
@@ -33,7 +39,8 @@ def main():
     fig.subplots_adjust(left=.065, right=.97, bottom=.27, top=.70, wspace=.34)
     fig.text(.065, .93, 'CFS vs EEVDF under CPU contention', fontsize=23,
              fontweight='bold', color='#142438')
-    fig.text(.065, .875, 'One periodic task + 1, 2, 4 or 8 busy workers on CPU 2',
+    worker_text = (', '.join(map(str, counts[:-1])) + ' or ' if len(counts) > 1 else '') + str(counts[-1])
+    fig.text(.065, .875, f'One periodic task + {worker_text} busy workers on CPU 2',
              fontsize=13, color='#596579')
     fig.text(.065, .825, '1,000 periodic jobs per run · about 1 ms of calibrated work every 10 ms',
              fontsize=11, color='#596579')
@@ -44,19 +51,19 @@ def main():
     ]
     for ax, (metric, scale, title, ylabel) in zip(axes, panels):
         for variant in COLORS:
-            values = [groups[variant, n]['metrics'][metric] for n in COUNTS]
+            values = [groups[variant, n]['metrics'][metric] for n in counts]
             middle = [v['median'] * scale for v in values]
             errors = [[(v['median'] - v['min']) * scale for v in values],
                       [(v['max'] - v['median']) * scale for v in values]]
-            ax.errorbar(COUNTS, middle, yerr=errors, color=COLORS[variant],
+            ax.errorbar(counts, middle, yerr=errors, color=COLORS[variant],
                         label=variant.upper(), marker='o' if variant == 'cfs' else 's',
                         markersize=6, markerfacecolor='white', capsize=4,
                         linewidth=2, linestyle='-' if variant == 'cfs' else '--',
                         clip_on=False)
         ax.set_title(title, loc='left', fontsize=14, fontweight='bold', color='#142438', pad=16)
         ax.set_xscale('log', base=2)
-        ax.set_xticks(COUNTS, labels=[str(n) for n in COUNTS])
-        ax.set_xlim(.85, 9.4)
+        ax.set_xticks(counts, labels=[str(n) for n in counts])
+        ax.set_xlim(min(counts) * .85, max(counts) * 1.175)
         ax.set_xlabel('Competing workers', labelpad=9)
         ax.set_ylabel(ylabel, labelpad=8)
         ax.grid(color='#E9EDF2', linewidth=.8)
@@ -81,6 +88,9 @@ def main():
     fig.text(.065, .115, f'Normal policy, nice 0, calibration {calibration} ns/loop. Background throughput excludes work outside the periodic interval.',
              fontsize=9.5, color='#6B7280')
     note = 'Exploratory matrix; kernel order was not alternated. Warm-up excluded.'
+    if args.kernel_order:
+        order = 'CFS → EEVDF' if args.kernel_order == 'cfs-first' else 'EEVDF → CFS'
+        note = f'Order: {order} in separate boot blocks; individual runs were not alternated. Warm-up excluded.'
     if log_latency:
         note += ' Tail-latency axis is logarithmic.'
     fig.text(.065, .07, note, fontsize=9.5, color='#6B7280')

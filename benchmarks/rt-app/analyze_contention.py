@@ -85,15 +85,18 @@ def analyze_run(path, variant, workers, repeat):
     return {'variant': variant, 'workers': workers, 'repeat': repeat, **metrics}, config, meta
 
 
-def summarize(root, repeats):
+def summarize(root, repeats, worker_counts=COUNTS):
+    check(worker_counts and len(set(worker_counts)) == len(worker_counts)
+          and all(n in COUNTS for n in worker_counts), 'Use distinct worker counts from 1, 2, 4, 8')
+    counts = tuple(sorted(worker_counts))
     runs, configs, identities = [], {}, []
     for variant in ('cfs', 'eevdf'):
         folder = root / variant
         check((folder / 'dmesg-before.txt').read_bytes() == (folder / 'dmesg-after.txt').read_bytes(),
               f'{folder}: kernel log changed')
         check((folder / 'taint.txt').read_text().strip() == '0', f'{folder}: kernel is tainted')
-        check({p.name for p in folder.glob('workers-*')} == {f'workers-{n}' for n in COUNTS}, f'{folder}: incomplete worker matrix')
-        for workers in COUNTS:
+        check({p.name for p in folder.glob('workers-*')} == {f'workers-{n}' for n in counts}, f'{folder}: worker matrix differs from requested counts')
+        for workers in counts:
             case = folder / f'workers-{workers}'
             check({p.name for p in case.glob('run-*')} == {f'run-{i}' for i in range(1, repeats + 1)}, f'{case}: incomplete repeat set')
             for repeat in range(1, repeats + 1):
@@ -110,13 +113,14 @@ def summarize(root, repeats):
     groups = []
     metrics = [key for key in runs[0] if key not in ('variant', 'workers', 'repeat')]
     for variant in ('cfs', 'eevdf'):
-        for workers in COUNTS:
+        for workers in counts:
             selected = [r for r in runs if (r['variant'], r['workers']) == (variant, workers)]
             values = {key: [r[key] for r in selected] for key in metrics}
             groups.append({'variant': variant, 'workers': workers, 'repeats': repeats,
                            'metrics': {key: {'median': statistics.median(v), 'min': min(v), 'max': max(v)}
                                        for key, v in values.items()}})
-    return {'calibration_ns_per_loop': identities[0]['calibration'], 'repeats': repeats, 'runs': runs, 'groups': groups,
+    return {'calibration_ns_per_loop': identities[0]['calibration'], 'repeats': repeats, 'worker_counts': list(counts),
+            'runs': runs, 'groups': groups,
             'method': {'latency': 'c_period - slack, microseconds; all 1000 measured jobs',
                        'p99': 'nearest rank per run; jobs are not pooled across runs',
                        'background': 'whole fixed-work chunks inside the observed periodic interval, per second',
@@ -127,10 +131,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('root', type=Path)
     parser.add_argument('--repeats', type=int, default=3)
+    parser.add_argument('--workers', type=int, choices=COUNTS, nargs='+', default=list(COUNTS),
+                        help='Exact worker counts expected in the input matrix.')
     args = parser.parse_args()
     try:
         check(args.repeats > 0, 'repeats must be positive')
-        output = summarize(args.root, args.repeats)
+        output = summarize(args.root, args.repeats, args.workers)
     except (OSError, ValueError) as error:
         parser.exit(1, f'Invalid benchmark data: {error}\n')
     target = args.root / 'summary.json'

@@ -51,3 +51,13 @@ python3 benchmarks/rt-app/plot_contention.py results/rt-app-contention
 ```
 
 Graph bars show the observed run range, not a confidence interval.
+
+For a five-repeat check at only 4 and 8 workers, use a fresh output directory:
+
+```sh
+python3 benchmarks/rt-app/run_contention.py results/rt-app-repeat --calibration 19 --workers 4 8 --repeats 5
+```
+
+Run that command first on CFS, then on EEVDF to reverse the original order.
+Analyze with `--workers 4 8 --repeats 5`; plot with `--kernel-order cfs-first`.
+This reverses the two kernel blocks; individual runs still are not alternated.
