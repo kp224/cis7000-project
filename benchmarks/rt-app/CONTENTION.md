@@ -34,3 +34,12 @@ python3 benchmarks/rt-app/run_contention.py results/rt-app-contention --calibrat
 
 Each kernel gets its own directory; existing data is never overwritten.
 The runner checks worker settings and records commands' output and metadata.
+
+After both matrices finish, validate and summarize the saved data:
+
+```sh
+python3 benchmarks/rt-app/analyze_contention.py results/rt-app-contention
+```
+
+The summary keeps per-run metrics and shows their median/min/max. It rejects
+missing samples, mismatched settings, or competitors that finish too early.
