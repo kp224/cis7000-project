@@ -62,3 +62,9 @@ Run that command first on CFS, then on EEVDF to reverse the original order.
 Analyze with `--workers 4 8 --repeats 5`; plot with `--kernel-order cfs-first`.
 This reverses the two kernel blocks; individual runs still are not alternated.
 Use `--machine NAME` when plotting to identify the tested machine.
+
+Run the analyzer regression tests locally; no CloudLab node is needed:
+
+```sh
+python3 -B -m unittest discover -s benchmarks/rt-app -p 'test_*.py'
+```

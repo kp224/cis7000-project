@@ -35,7 +35,7 @@ def phase(task):
     if 'phases' in task:
         check(len(task['phases']) == 1, 'Expected one phase per task')
         return next(iter(task['phases'].values()))
-    return {key: task[key] for key in ('run', 'runtime', 'timer', 'sleep') if key in task}
+    return {key: value for key, value in task.items() if key in ('run', 'runtime', 'timer', 'sleep')}
 
 
 def analyze_run(path, variant, workers, repeat):
@@ -55,7 +55,10 @@ def analyze_run(path, variant, workers, repeat):
     for task in tasks.values():
         check(task['policy'] == 'SCHED_OTHER' and task['priority'] == 0 and task['cpus'] == [2], 'Wrong task scheduling')
     check(periodic['loop'] == 1000 and periodic['delay'] == 100000, 'Wrong periodic count/delay')
-    check(phase(periodic) == {'run': 1000, 'timer': {'ref': 'unique', 'period': 10000, 'mode': 'absolute'}}, 'Wrong periodic phase')
+    periodic_phase = phase(periodic)
+    # rt-app executes events in JSON order; slack must be sampled after the work.
+    check(list(periodic_phase) == ['run', 'timer'], 'Periodic events must be run then timer')
+    check(periodic_phase == {'run': 1000, 'timer': {'ref': 'unique', 'period': 10000, 'mode': 'absolute'}}, 'Wrong periodic phase')
     check(background['instance'] == workers and background['loop'] == 32000 // workers
           and phase(background) == {'run': 1000}, 'Wrong background workload')
     console = (path / 'console.log').read_text()
