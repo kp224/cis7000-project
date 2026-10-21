@@ -61,3 +61,4 @@ python3 benchmarks/rt-app/run_contention.py results/rt-app-repeat --calibration 
 Run that command first on CFS, then on EEVDF to reverse the original order.
 Analyze with `--workers 4 8 --repeats 5`; plot with `--kernel-order cfs-first`.
 This reverses the two kernel blocks; individual runs still are not alternated.
+Use `--machine NAME` when plotting to identify the tested machine.

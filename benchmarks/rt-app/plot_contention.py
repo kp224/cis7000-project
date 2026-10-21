@@ -18,6 +18,7 @@ def main():
     parser.add_argument('root', type=Path, help='Directory containing summary.json')
     parser.add_argument('--kernel-order', choices=('cfs-first', 'eevdf-first'),
                         help='Annotate the order of the two kernel boot blocks.')
+    parser.add_argument('--machine', help='Machine label shown on the graph.')
     args = parser.parse_args()
     data = json.loads((args.root / 'summary.json').read_text())
     counts = tuple(data.get('worker_counts', COUNTS))
@@ -40,7 +41,10 @@ def main():
     fig.text(.065, .93, 'CFS vs EEVDF under CPU contention', fontsize=23,
              fontweight='bold', color='#142438')
     worker_text = (', '.join(map(str, counts[:-1])) + ' or ' if len(counts) > 1 else '') + str(counts[-1])
-    fig.text(.065, .875, f'One periodic task + {worker_text} busy workers on CPU 2',
+    subtitle = f'One periodic task + {worker_text} busy workers on CPU 2'
+    if args.machine:
+        subtitle += f' · {args.machine}'
+    fig.text(.065, .875, subtitle,
              fontsize=13, color='#596579')
     fig.text(.065, .825, '1,000 periodic jobs per run · about 1 ms of calibrated work every 10 ms',
              fontsize=11, color='#596579')
